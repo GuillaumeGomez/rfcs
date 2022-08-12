@@ -10,22 +10,20 @@ Rustdoc: jump to definition
 
 Generate links on idents in the rustdoc source code pages which links to the item's definition and documentation (if available).
 
-# Motivation
-[motivation]: #motivation
-
-This RFC proposes to generate links in the rustdoc source code pages (the ones you end up on when clicking on the `source` links) to allow you to jump to an item definition or back to its documentation page.
-
-The goal of this RFC is to greatly improve the browing experience of the source page (especially when looking for private items).
-
-Since a video is worth a thousand words:
-
-https://user-images.githubusercontent.com/3050060/114622354-21307b00-9cae-11eb-834d-f6d8178a37bd.mp4
-
-You can also give it a try with the following docs:
+You can try a live demo with the following docs:
 
  * [askama](https://rustdoc.crud.net/imperio/jump-to-def-askama/src/askama/lib.rs.html)
  * [regex](https://rustdoc.crud.net/imperio/jump-to-def-regex/src/regex/lib.rs.html)
  * [rand](https://rustdoc.crud.net/imperio/jump-to-def-rand/src/rand/lib.rs.html)
+
+# Motivation
+[motivation]: #motivation
+
+The rustdoc source code pages (the ones you end up on when clicking on the `source` links) are a feature that allows one to easily take a look at an item implementation, whether it is by curiosity on how it works or for checking some technical details.
+
+However, the Rust language uses a lot indirections, making it difficult to find an information if it is not on the page the user is already on, limiting the usefulness of the source code pages.
+
+This RFC proposes to generate links in the rustdoc source code pages to allow you to jump to an item definition or back to its documentation page to make it much easier to browse these pages without needing to clone the crate locally.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -73,20 +71,117 @@ Another important note is that if documentation is split in multiple places or r
 
 A good example where this would be very helpful is for the [rust compiler source code](https://doc.rust-lang.org/1.57.0/nightly-rustc/src/rustc_middle/hir/map/mod.rs.html#872-877): even if a fully set up IDE or github, it's very hard to go around without previous knowledge or help from someone else. It's also very common to have undocumented items or to just want to see how something is implemented. With the "jump to definition", it already improved quite a lot the browsing experience by allowing to jump super quickly by simply clicking on a item. The missing part is now to go back from the source code into the item documentation to make it complete.
 
+Here is a video showing the feature in action:
+
+https://user-images.githubusercontent.com/3050060/114622354-21307b00-9cae-11eb-834d-f6d8178a37bd.mp4
+
+
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-It doesn't require javascript since it's only generating links, making it work with or without javascript enabled.
+This feature **only** targets the source code pages.
 
-For the link generation, we use the already existing system in rustdoc. Meaning their generation will follow the same rules as the link in the documentation pages.
+It can be implemented without JavaScript additions to Rustdoc as pure link generation; so it will work without JS enabled. Rustdoc already has an internal link generation system that can be used here.
 
-All items with documentation should have a link to their documentation page (like impl blocks, methods, trait/impl associated items, etc).
+## Link generation
 
-So on the technical side, there is no big issues (based on what is described in this RFC). A few parts of this RFC are implemented in the following pull requests:
+There are two kinds of links:
 
- * [#84176](https://github.com/rust-lang/rust/pull/84176)
- * [#88033](https://github.com/rust-lang/rust/pull/88033)
- * [#91264](https://github.com/rust-lang/rust/pull/91264)
+ * Jump to documentation.
+ * Jump to definition.
+
+### Jump to documentation
+
+All items with a documentation page should have a link to it (like methods, trait/impl associated items, etc). However, fields, variants and impl blocks should not (explications below).
+
+The link is generated on their ident/name where they are declared, not when they are in use. For example:
+
+```rust
+pub struct Foo;
+
+let x = Foo;
+```
+
+On `Foo` definition (`pub struct Foo`), we generate a link to its documentation page whereas on its usage (`x = Foo`), we generate a link to jump to its definition.
+
+This is why generating a link for the impl blocks would be complicated: on `impl Foo`, we generate a "jump to definition" link on `Foo`, leaving no space to generate a link to the impl documentation.
+
+For fields and variants, it's simply to limit the quantity of links generated: you can simply click on their parent item to get to their documentation page.
+
+### Jump to definition
+
+A small preamble before listing the items we should generate links for: if an item which should get a link is preceded by a path, the whole path is used as a link. For example:
+
+```rust
+let x: b::c::D; // `b::c::D` is the link to `D`.
+foo::some_fn(); // `foo::some_fn` is the link to `some_fn`.
+```
+
+Anything not specifically mentioned should not get a link generated for itself (such as variable name):
+
+```rust
+fn f(mut a: String) {
+    a.push_str("something"); // `a` should not get a link but `push_str` should!
+}
+```
+
+#### Primitive types
+
+No primitive type should get a link.
+
+#### Fields/variants
+
+They should not get a link either.
+
+#### Imports
+
+For a single import such as `use foo::bar;`, `foo::bar` would be the link.
+For a multiple import such as `use foo::{a, b, c};`, `a`, `b` and `c` would be 3 different links.
+
+#### Types
+
+Whenever a type appears, we should link to its definition. For example:
+
+```rust
+let x: String = "a".to_owned(); // we generate a link on `String`.
+let y: Foo<Bar>; // We generate a link on both `Foo` and `Bar`.
+
+fn foo<F: Display, T: F + Debug>(f: F, t: T) {} // We generate a link on `Display` and `Debug`.
+```
+
+#### Functions/methods
+
+Whenever a function/method is present, we should generate a link to it. Example:
+
+```rust
+let x: Fn() = some_fn; // We should link to `some_fn`.
+some_fn(); // We should link to `some_fn`.
+ty.a().b(); // We should link to `a` and to `b`.
+```
+
+#### Macros
+
+Macro calls should get a generated link:
+
+```rust
+some_macro!(); // Should link to `some_macro!`.
+```
+
+#### Constants/statics
+
+Both these kinds of item should get a link too:
+
+```rust
+static FOO: u32 = 0;
+const BAR: u32 = 0;
+
+let x = FOO; // `FOO` gets a link.
+let y = BAR; // `BAR` gets a link.
+```
+
+#### Modules
+
+Inline modules should never generate a "jump to definition" link, only a "jump to documentation" one. However, other modules will behave as follows: if they are private and the `--document-private-items` is not in use, they will generate a "jump to definition" link. Otherwise they will generate a "jump to documentation" link.
 
 ## UI
 
@@ -110,15 +205,19 @@ Basically, the source code pages' UI doesn't change.
 # Drawbacks
 [drawbacks]: #drawbacks
 
-**The biggest concern is actually about "scope expansion"**. If we add this feature, are we doing too much? Rustdoc is supposed to be about documentation, so is providing more information into the source code page really necessary?
+## scope expansion
 
-An answer about this is that it actually makes source code browsing much more pleasant and convenient. Multiple other documentation tools provide this feature for this reason so it doesn't seem like it would be out of scope in this regard.
+If we add this feature, are we doing too much? Rustdoc is supposed to be about documentation, so is providing more information into the source code page really necessary?
 
-**Another concern is**: "why should we implement this in rustdoc? Aren't there already existing tools doing it?"
+The source code pages have been there since the 1.0 release. Even with great documentation, looking at the item's implementation can allow to maybe have a deeper understand on how it works. It can also allow you to learn new idioms and better understand the language.
+
+As such, this feature isn't a scope of extension but really something to make the current situation even better by making the source code browsing much more pleasant and convenient. Multiple other documentation tools provide this feature for the same reason.
+
+## Why in rustdoc?
 
 A good answer to this is actually the following scenario: you are on <docs.rs> and you're looking at a crate documentation. You want to see how something is implemented and click on the `source` link. At this point, you encounter an item used in this page but not defined in this page. Do you want to clone the crate locally to check it out or go to github/gitlab to check it there or do you prefer having the links directly available?
 
-**Another concern is**: "impact on the size of the generated pages"
+## Impact on the generated pages' size
 
 Since we generate links, it will increase the size of the source code pages. Here are a few examples with the currently implemented parts of this feature:
 
@@ -137,7 +236,7 @@ The impact on the number of DOM nodes now (I took random pages with enough code 
 | regex/re_bytes.rs.html | 4386 | 4386 | 0% |
 | rand/distributions/uniform.rs.html | 6838 | 6838 | 0% |
 
-**Last concern is about the maintenance**.
+## Maintenance cost
 
 Any feature has a maintenance cost, this one included. It was suggested to put this feature in its own crate. The only part that can be extracted is the span map builder. But it would very likely be more of a problem than a solution considering that rustdoc API doesn't allow it easily. An important reminder: this feature is less than 200 lines of code in rustdoc and doesn't require any extra dependency.
 
