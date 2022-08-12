@@ -117,7 +117,11 @@ let x: b::c::D; // `b::c::D` is the link to `D`.
 foo::some_fn(); // `foo::some_fn` is the link to `some_fn`.
 ```
 
-Anything not specifically mentioned should not get a link generated for itself (such as variable name):
+Anything not specifically mentioned should not get a link generated for itself.
+
+#### Local variables
+
+Local variables should not get a link:
 
 ```rust
 fn f(mut a: String) {
@@ -129,7 +133,7 @@ fn f(mut a: String) {
 
 No primitive type should get a link.
 
-#### Fields/variants
+#### Fields
 
 They should not get a link either.
 
