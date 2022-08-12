@@ -19,7 +19,7 @@ You can try a live demo with the following docs:
 # Motivation
 [motivation]: #motivation
 
-The rustdoc source code pages (the ones you end up on when clicking on the `source` links) are a feature that allows one to easily take a look at an item implementation, whether it is by curiosity on how it works or for checking some technical details.
+The rustdoc source code pages (the ones you end up on when clicking on the `source` links) are a feature that allows one to easily take a look at an item implementation, whether it is by curiosity on how it works or for checking some technical details. Having a great documentation doesn't prevent users to want to actually see how the code looks like.
 
 However, the Rust language uses a lot indirections, making it difficult to find an information if it is not on the page the user is already on, limiting the usefulness of the source code pages.
 
