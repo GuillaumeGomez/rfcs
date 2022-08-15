@@ -19,11 +19,39 @@ You can try a live demo with the following docs:
 # Motivation
 [motivation]: #motivation
 
-The rustdoc source code pages (the ones you end up on when clicking on the `source` links) are a feature that allows one to easily take a look at an item implementation, whether it is by curiosity on how it works or for checking some technical details. Having a great documentation doesn't prevent users to want to actually see how the code looks like.
+Documentation readers use the source link in rustdoc to perform a [variety of tasks](https://twitter.com/j4cob/status/1558175299174547457). Very often, Rust documentation readers will reach a “dead-end” trying to accomplish their task, because the source code calls functions from another source file or another crate. We should eliminate these dead ends so readers can dive into source code with confidence they will be able to complete the task they set out to do. Some of the most common tasks:
 
-However, the Rust language uses a lot indirections, making it difficult to find an information if it is not on the page the user is already on, limiting the usefulness of the source code pages.
+ - bug-finding
+ - verifying that implementation matches documentation
+ - checking intentionally undocumented implementation details
+ - learning more about the language, idiomatic style, and useful techniques
 
-This RFC proposes to generate links in the rustdoc source code pages to allow you to jump to an item definition or back to its documentation page to make it much easier to browse these pages without needing to clone the crate locally.
+Source view is an extremely common feature in documentation tools for many languages. It is particularly useful to tie source view to documentation because many of the tasks readers want to accomplish are tied specifically to documentation they are reading. A doc page can link them directly to the implementation information for the item they are looking at. If doc pages don’t link to source, the alternative is much more painful and time consuming: the reader has to find the repository for the documentation they are looking at, clone it, open the repository in an IDE, wait for rust-analyzer to build its index, navigate to the same item they were looking at in the documentation, and finally start reading code. This can take several minutes and be very frustrating.
+
+Source view is useful even for the most comprehensively documented code, because the tasks readers accomplish with it are not primarily due to under-documented code. For instance, bug-finding: even the most well-documented crates have bugs, and most of those bugs are not documented because the author is unaware of them. Or finding implementation details: good documentation intentionally omits many implementation details, like the size of an object, which it can be entirely stack-resident (vs containing Boxes), or what syscalls are used to implement a function. But documentation readers sometimes need to check those details to better understand their running code, even if the wise reader knows implementation may change without notice.
+
+We include source view as part of rustdoc because source code, like documentation, changes over time. It’s useful to have a copy of source code that we know with 100% certainty is the same source code the documentation was generated from. When there are multiple versions of the documentation available (as on docs.rs), there can be multiple versions of the source code available too. In the particular case of docs.rs, each version of a crate is documented based on that crate’s immutable contents from crates.io. If we delegate source view to GitHub (see Alternatives), there’s no guarantee that a version of the source code corresponding to the documentation continues to exist.
+
+Here are some of the dead-ends a reader can encounter while reading a line of source that contains `a.foo()`:
+
+ - “I don’t know what type `a` is” (e.g. due to type inference).
+ - “I know what type `a` is but not its fully-qualified type” (e.g. due to glob imports).
+ - “I don’t know what type `foo()` is defined on” (e.g. it could be defined on some trait).
+ - “I don’t know how to find `foo()`’s documentation or source” (e.g. because `foo` is private).
+
+Note that some of these problems are likely to occur in source view but less likely to occur in examples, because examples are only able to use public types, and because they are usually written to be clear about what types are being used.
+
+For any instance of `a.foo()` in source view, there is exactly one answer to the question: where is `foo` implemented? However, answering that question requires (a) doing version selection according to Cargo’s algorithms, (b) fetching all dependencies, and (c) running rustc or equivalent to process all the `use` statements and type inferences. Third-party code navigation tools (GitHub; Google Code Search) generally do not actually build the source code they are navigating. Instead, they do some amount of [syntactic processing and use search-based navigation](https://docs.github.com/en/repositories/working-with-files/using-files/navigating-code-on-github#precise-and-search-based-navigation). For instance, GitHub uses [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for search-based navigation. It also uses [stack-graphs](https://github.com/github/stack-graphs) for “precise navigation” of certain languages. Neither one supports Rust yet. It is likely that even if stack-graphs acquires support for Rust, it will not be quite correct unless stack-graphs also manages to implement Rust’s type inference rules. Also, [according to GitHub](https://docs.github.com/en/repositories/working-with-files/using-files/navigating-code-on-github#troubleshooting-code-navigation): “Code navigation only works for active branches.”
+
+Compared to third-party source navigation tools, rustdoc and the crates.io ecosystem have a significant advantage: almost every release of every crate has its documentation built by docs.rs. Because rustdoc is tightly integrated with rustc, that documentation build can process the code exactly as rustc does, and offer the exactly correct answer for “where is `foo` implemented?”
+
+## Cross-crate links
+
+Sometimes the implementation a reader wants is in another crate. This is particularly common in Rust, where “facade crates” are often used. Source view should link to that other crate whenever possible. But linking to another crate requires (a) knowing where source code for another crate can be found, and (b) choosing an appropriate version of that crate.
+
+These problems are (relatively) easy to solve for crates within the crates.io ecosystem: most versions of most crates are available on docs.rs, along with source code. Outside the crates.io / docs.rs ecosystem they are much harder to solve: the mapping from crate to repository is incomplete, and so is the mapping from repository to specific versions within that repository.
+
+There are nevertheless some challenges to selecting the version appropriately within the crates.io ecosystem. See the Reference-level explanation for more detail (TKTK - add detail in Reference-level explanation).
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
