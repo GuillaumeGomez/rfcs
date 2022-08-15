@@ -142,6 +142,18 @@ No primitive type should get a link.
 
 They should not get a link either.
 
+#### Variants
+
+They should get a link, but only on their usage (as already specified in the "jump to documentation" section):
+
+```rust
+enum Enum {
+    Variant, // No link here.
+}
+
+let x = Enum::Variant; // `Enum::Variant` is the link to `Variant` definition.
+```
+
 #### Imports
 
 For a single import such as `use foo::bar;`, `foo::bar` would be the link.
