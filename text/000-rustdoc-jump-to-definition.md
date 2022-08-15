@@ -121,7 +121,7 @@ Anything not specifically mentioned should not get a link generated for itself.
 
 #### Local variables
 
-Local variables should get a link:
+Local variables should get a link to their definition (not their type):
 
 ```rust
 fn f(mut a: String) {
