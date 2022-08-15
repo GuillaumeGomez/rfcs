@@ -273,9 +273,9 @@ As mentionned above, it is actually quite common for documentation tools to have
 | [Elixir](https://elixir.bootlin.com) (used for linux kernel) | yes | yes | no |
 | [Go](https://cs.opensource.google/go/go/+/go1.16.5:src/database/sql/sql.go;l=44) | yes | yes | no |
 | [hexdocs](https://preview.hex.pm/preview/k6/0.0.1/show/lib/k6/template/web_socket.ex) | yes | no | no |
-| python (sphynx/pydoc) | no (links to github) | no | no |
+| [python](https://eff-certbot.readthedocs.io/en/stable/api/certbot.achallenges.html#certbot.achallenges.AnnotatedChallenge) (sphynx/pydoc) | yes | no | no |
 | [ruby](https://ruby-doc.org/stdlib-3.1.2/libdoc/delegate/rdoc/Delegator.html#method-i-__raise__) | yes (directly on the page) | yes/no (it is sometimes in examples) | no |
-| [perl](https://metacpan.org/dist/DBD-SQLite/source/lib/DBD/SQLite.pm) | yes | yes | yes |
+| [perl](https://metacpan.org/dist/DBD-SQLite/view/lib/DBD/SQLite/Cookbook.pod) (source link on the left side) | yes | yes | yes |
 | [haskell](https://devdocs.io/haskell~9/libraries/binary-0.8.9.0/data-binary-builder#v:append) | yes | yes | no |
 | [opal](https://opalrb.com/docs/api/v1.4.1/stdlib/Buffer) | yes (directly on the page) | no | yes |
 | [cargo-src](https://github.com/rust-dev-tools/cargo-src) | yes | yes | yes |
