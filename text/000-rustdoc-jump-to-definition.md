@@ -121,13 +121,18 @@ Anything not specifically mentioned should not get a link generated for itself.
 
 #### Local variables
 
-Local variables should not get a link:
+Local variables should get a link:
 
 ```rust
 fn f(mut a: String) {
-    a.push_str("something"); // `a` should not get a link but `push_str` should!
+    a.push_str("something"); // `a` get a link just like `push_str`!
 }
 ```
+
+The reasons about supporting local variables are as follow:
+
+ * We want to linkify global variables, because they may be far away or in another file.
+ * If you're looking at a variable reference in a function, you don't know whether it's a local variable or a global one (or one from an enclosing scope). By linkifying variables we make it easy for people to find out the answer. If we linkify only some variables (the global ones), it will appear weird that some are linkified and some are not. So for coherency, it should be done for all local variables.
 
 #### Primitive types
 
