@@ -259,11 +259,10 @@ Some extra explanations about the statement "less JS code, less maintenance": To
 
 With this in mind, the suggested UI would be like this:
 
- * Links generated on idents in source code will jump to the ident definition.
- * Links generated on items' definition will jump to their documentation page (if any, private items don't have one by default).
- * On mobile, these links will have dotted underline (because you don't have a cursor which change when hovering them).
+ * By default, the links have no decoration.
+ * On hover, the links get an underline decoration.
 
-Another thing which would be nice: to make it more obvious if a link points to source code or to documentation, they should have different visual markers (different background/underline colors for example).
+To make it obvious whether a link is "jump to def" or "jump to doc", the underline decoration will be different between them: the "jump to doc" link underline will be dotted.
 
 Basically, the source code pages' UI doesn't change.
 
@@ -322,6 +321,8 @@ rust-analyzer: This is a public opensource project. However, the setup isn't sup
 rust-analyzer in the browser: Another possibility would be to run it with wasm. However, it brings a few issues: it requires JS to work (obviously, but it's not a big problem), it would be quite heavy to run and it would complexify rustdoc build quite a lot.
 
 External library (like `cpan` or `tree-sitter`): They would work to generate links to another source code location. However, they bring their downsides as well: they would need to be kept up-to-date with rust syntax evolution (if any) and making links back to documentation would be very tricky because some information is only internal to rustdoc (like how to differentiate between different `impl blocks` or different blanket trait implementations like `impl Trait<T: Clone> for T` and `impl Trait<T: Copy> for T`).
+
+[SourceGraph](https://sourcegraph.com/github.com/rust-lang/rustc-demangle@2811a1ad6f7c8bead2ef3671e4fdc10de1553e96/-/blob/src/v0.rs?L65): SourceGraph uses [Language Server Index Format (LSIF)](https://github.com/Microsoft/language-server-protocol/blob/main/indexFormat/specification.md) to extract info from a language server and make it available in a static format. And rust-analyzer bindings for LSIF already exist. The problem is that it would require a live server to work, which is a blocker to be integrated into rustdoc as it must work serverless.
 
 # Prior art
 [prior-art]: #prior-art
