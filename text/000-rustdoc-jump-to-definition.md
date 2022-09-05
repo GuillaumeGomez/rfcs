@@ -232,6 +232,22 @@ let y = BAR; // `BAR` gets a link.
 
 Inline modules should never generate a "jump to definition" link, only a "jump to documentation" one. However, other modules will behave as follows: if they are private and the `--document-private-items` is not in use, they will generate a "jump to definition" link. Otherwise they will generate a "jump to documentation" link.
 
+#### Paths
+
+Any part of a path which isn't a keyword should get a link. So for example:
+
+```rust
+use crate::foo::bar{self, Type};
+```
+
+In this one, `foo`, `bar` and `Type` should get a link.
+
+```rust
+let x = X::Y::Z;
+```
+
+In this one, `X`, `Y` and `Z` should get a link.
+
 ## UI
 
 For the UI, we have the following constraints:
@@ -292,7 +308,7 @@ Any feature has a maintenance cost, this one included. It was suggested to put t
 One more argument about this is that the feature actually requires not that much code. It is split in two parts:
 
  * https://github.com/rust-lang/rust/blob/master/src/librustdoc/html/render/span_map.rs (which is basically a visitor gathering `span`)
- * https://github.com/rust-lang/rust/blob/master/src/librustdoc/html/highlight.rs#L725-L753 (for generating links)
+ * https://github.com/rust-lang/rust/blob/6e4a9ab650b135ae0ff761e4a37d96c8bcaf7b3d/src/librustdoc/html/highlight.rs#L977-L993 (for generating links)
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
