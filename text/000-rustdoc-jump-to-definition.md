@@ -8,7 +8,7 @@ Rustdoc: jump to definition
 # Summary
 [summary]: #summary
 
-Generate links on idents in the rustdoc source code pages which links to the item's definition and documentation (if available).
+Generate links on idents in the rustdoc source code pages which links to the item's definition and documentation (if available). Remove the nightly `--generate-link-to-definition` option, enable this feature by default and add a new option to allow to disable this feature: `--disable-jump-to-definition`.
 
 You can try a live demo with the following docs:
 
@@ -49,9 +49,9 @@ Compared to third-party source navigation tools, rustdoc and the crates.io ecosy
 
 Sometimes the implementation a reader wants is in another crate. This is particularly common in Rust, where “facade crates” are often used. Source view should link to that other crate whenever possible. But linking to another crate requires (a) knowing where source code for another crate can be found, and (b) choosing an appropriate version of that crate.
 
-These problems are (relatively) easy to solve for crates within the crates.io ecosystem: most versions of most crates are available on docs.rs, along with source code. Outside the crates.io / docs.rs ecosystem they are much harder to solve: the mapping from crate to repository is incomplete, and so is the mapping from repository to specific versions within that repository.
+These problems are (relatively) easy to solve for crates within the `crates.io` ecosystem: most versions of most crates are available on docs.rs, along with source code. Outside the crates.io / docs.rs ecosystem they are much harder to solve: the mapping from crate to repository is incomplete, and so is the mapping from repository to specific versions within that repository.
 
-There are nevertheless some challenges to selecting the version appropriately within the crates.io ecosystem. See the Reference-level explanation for more detail (TKTK - add detail in Reference-level explanation).
+There are nevertheless some challenges to selecting the version appropriately within the crates.io ecosystem. See the Reference-level explanation for more detail.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -109,7 +109,7 @@ https://user-images.githubusercontent.com/3050060/114622354-21307b00-9cae-11eb-8
 
 This feature **only** targets the source code pages.
 
-It can be implemented without JavaScript additions to Rustdoc as pure link generation; so it will work without JS enabled. Rustdoc already has an internal link generation system that can be used here.
+It will be implemented without JavaScript additions to Rustdoc as pure link generation; so it will work without JS enabled. Rustdoc already has an internal link generation system that can be used here.
 
 ## Link generation
 
@@ -120,9 +120,9 @@ There are two kinds of links:
 
 ### Jump to documentation
 
-All items with a documentation page should have a link to it (like methods, trait/impl associated items, etc). However, fields, variants and impl blocks should not (explications below).
+All items with a documentation page will have a link to it (like methods, trait/impl associated items, etc). However, fields, variants and impl blocks won't (explications below).
 
-The link is generated on their ident/name where they are declared, not when they are in use. For example:
+The link will be generated on their ident/name where they are declared, not when they are in use. For example:
 
 ```rust
 pub struct Foo;
@@ -130,26 +130,26 @@ pub struct Foo;
 let x = Foo;
 ```
 
-On `Foo` definition (`pub struct Foo`), we generate a link to its documentation page whereas on its usage (`x = Foo`), we generate a link to jump to its definition.
+On `Foo` definition (`pub struct Foo`), we will generate a link to its documentation page whereas on its usage (`x = Foo`), we will generate a link to jump to its definition.
 
-This is why generating a link for the impl blocks would be complicated: on `impl Foo`, we generate a "jump to definition" link on `Foo`, leaving no space to generate a link to the impl documentation.
+This is why generating a link for the impl blocks would be complicated: on `impl Foo`, we will generate a "jump to definition" link on `Foo`, leaving no space to generate a link to the impl documentation.
 
 For fields and variants, it's simply to limit the quantity of links generated: you can simply click on their parent item to get to their documentation page.
 
 ### Jump to definition
 
-A small preamble before listing the items we should generate links for: if an item which should get a link is preceded by a path, the whole path is used as a link. For example:
+A small preamble before listing the items we should generate links for: if an item which will get a link is preceded by a path, each part of the path will be a link to its target. For example:
 
 ```rust
-let x: b::c::D; // `b::c::D` is the link to `D`.
-foo::some_fn(); // `foo::some_fn` is the link to `some_fn`.
+let x: b::c::D; // `b` is a link to `b`, `c` is a link to `b::c`, `D` is a link to `b::c::D`.
+foo::some_fn(); // `foo` is a link to `foo` and `some_fn` is the link to `foo::some_fn`.
 ```
 
-Anything not specifically mentioned should not get a link generated for itself.
+Anything not specifically mentioned won't get a link generated for itself.
 
 #### Local variables
 
-Local variables should get a link to their definition (not their type):
+Local variables will get a link to their definition (not their type):
 
 ```rust
 fn f(mut a: String) {
@@ -160,36 +160,36 @@ fn f(mut a: String) {
 The reasons about supporting local variables are as follow:
 
  * We want to linkify global variables, because they may be far away or in another file.
- * If you're looking at a variable reference in a function, you don't know whether it's a local variable or a global one (or one from an enclosing scope). By linkifying variables we make it easy for people to find out the answer. If we linkify only some variables (the global ones), it will appear weird that some are linkified and some are not. So for coherency, it should be done for all local variables.
+ * If you're looking at a variable reference in a function, you don't know whether it's a local variable or a global one (or one from an enclosing scope). By linkifying variables we make it easy for people to find out the answer. If we linkify only some variables (the global ones), it will appear weird that some are linkified and some are not. So for coherency, it will be done for all local variables.
 
 #### Primitive types
 
-No primitive type should get a link.
+No primitive type will get a link.
 
 #### Fields
 
-They should not get a link either.
+They will not get a link either.
 
 #### Variants
 
-They should get a link, but only on their usage (as already specified in the "jump to documentation" section):
+They will get a link, but only on their usage (as already specified in the "jump to documentation" section):
 
 ```rust
 enum Enum {
     Variant, // No link here.
 }
 
-let x = Enum::Variant; // `Enum::Variant` is the link to `Variant` definition.
+// `Enum` links to `Enum` and `Variant` is the link to `Enum::Variant` definition.
+let x = Enum::Variant;
 ```
 
 #### Imports
 
-For a single import such as `use foo::bar;`, `foo::bar` would be the link.
-For a multiple import such as `use foo::{a, b, c};`, `a`, `b` and `c` would be 3 different links.
+Imports will have links as well, following the [Paths](#Paths) rules.
 
 #### Types
 
-Whenever a type appears, we should link to its definition. For example:
+Whenever a type appears, we will link to its definition. For example:
 
 ```rust
 let x: String = "a".to_owned(); // we generate a link on `String`.
@@ -200,25 +200,25 @@ fn foo<F: Display, T: F + Debug>(f: F, t: T) {} // We generate a link on `Displa
 
 #### Functions/methods
 
-Whenever a function/method is present, we should generate a link to it. Example:
+Whenever a function/method is present, we will generate a link to it. Example:
 
 ```rust
-let x: Fn() = some_fn; // We should link to `some_fn`.
-some_fn(); // We should link to `some_fn`.
-ty.a().b(); // We should link to `a` and to `b`.
+let x: Fn() = some_fn; // We will link to `some_fn`.
+some_fn(); // We will link to `some_fn`.
+ty.a().b(); // We will link to `a` and to `b`.
 ```
 
 #### Macros
 
-Macro calls should get a generated link:
+Macro calls will get a link:
 
 ```rust
-some_macro!(); // Should link to `some_macro!`.
+some_macro!(); // Will link to `some_macro!`.
 ```
 
 #### Constants/statics
 
-Both these kinds of item should get a link too:
+Both these kinds of item will get a link too:
 
 ```rust
 static FOO: u32 = 0;
@@ -230,23 +230,33 @@ let y = BAR; // `BAR` gets a link.
 
 #### Modules
 
-Inline modules should never generate a "jump to definition" link, only a "jump to documentation" one. However, other modules will behave as follows: if they are private and the `--document-private-items` is not in use, they will generate a "jump to definition" link. Otherwise they will generate a "jump to documentation" link.
+Inline modules will never generate a "jump to definition" link, only a "jump to documentation" one. However, other modules will behave as follows: if they are private and the `--document-private-items` is not in use, they will generate a "jump to definition" link. Otherwise they will generate a "jump to documentation" link.
 
 #### Paths
 
-Any part of a path which isn't a keyword should get a link. So for example:
+Any part of a path which isn't a keyword will get a link. So for example:
 
 ```rust
 use crate::foo::bar{self, Type};
 ```
 
-In this one, `foo`, `bar` and `Type` should get a link.
+In this one, `foo`, `bar` and `Type` will get a link.
 
 ```rust
 let x = X::Y::Z;
 ```
 
-In this one, `X`, `Y` and `Z` should get a link.
+In this one, `X`, `Y` and `Z` will get a link.
+
+## Cross-crate links
+
+Some issues that can appear when generate cross-crate links is to link to non-existent locations. For example, if a version your crate depends on when published is yanked, your links (not just source code links but also links in documentation) will target non-existent pages and will result in 404 or "file not found" if local.
+
+A discussion about this suggested to instead add a new argument in the URL (`?source=true`) which would automatically click on the source link of the item on its documentation page. The problem is that private elements (unless the documentation is generated with `--document-private-items`) don't have a documentation page, which reduces the possibilities of this solution quite a lot. This fix would also only worked on web platform implementing it as it requires a server to pick a compatible version (in the semver meaning) for this crate. Another problem is: what to do if there is no compatible version (in the semver meaning still) available? For example, if there was only a `0.15` version published, `0.14.x` and `0.16.y` are not compatible to it. Then it would very likely just don't redirect and leave the user on the 404 page.
+
+The idea here would be to follow the current URL strategy in use for cross-crate items: generate a URL relative to the root path. If `--extern-html-root-url` isn't used, then the root-path is the one provided to rustdoc where to build documentation.
+
+This is somewhat the same answer for `cargo --no-deps`: unless rustdoc actually checks if the dependencies' locations are empty or not, there is no way for rustdoc to know if they're present. As such, it should simply assume that they are present and generate links for them as it does for the foreign items in the documentation pages.
 
 ## UI
 
@@ -257,12 +267,12 @@ For the UI, we have the following constraints:
 
 Some extra explanations about the statement "less JS code, less maintenance": To have this information in the front-end, the back-end has to generate it in any case (either as a link or any other format). So deciding to use JS to handle this would mean that we still have code in the back-end but we would also have code in the front-end to treat it.
 
-With this in mind, the suggested UI would be like this:
+With this in mind, the suggested UI will be like this:
 
  * By default, the links have no decoration.
- * On hover, the links get an underline decoration.
+ * On hover, the links will get an underline decoration.
 
-To make it obvious whether a link is "jump to def" or "jump to doc", the underline decoration will be different between them: the "jump to doc" link underline will be dotted.
+To make it obvious whether a link is "jump to def" or "jump to doc", the underline decoration will be different between them: the "jump to doc" links underline will be dotted.
 
 Basically, the source code pages' UI doesn't change.
 
@@ -273,7 +283,7 @@ Basically, the source code pages' UI doesn't change.
 
 If we add this feature, are we doing too much? Rustdoc is supposed to be about documentation, so is providing more information into the source code page really necessary?
 
-The source code pages have been there since the 1.0 release. Even with great documentation, looking at the item's implementation can allow to maybe have a deeper understand on how it works. It can also allow you to learn new idioms and better understand the language.
+The source code pages have been there since the 1.0 release. Even with great documentation, looking at the item's implementation can allow to maybe have a deeper understanding on how it works. It can also allow you to learn new idioms and better understand the language.
 
 As such, this feature isn't a scope of extension but really something to make the current situation even better by making the source code browsing much more pleasant and convenient. Multiple other documentation tools provide this feature for the same reason.
 
@@ -324,6 +334,8 @@ External library (like `cpan` or `tree-sitter`): They would work to generate lin
 
 [SourceGraph](https://sourcegraph.com/github.com/rust-lang/rustc-demangle@2811a1ad6f7c8bead2ef3671e4fdc10de1553e96/-/blob/src/v0.rs?L65): SourceGraph uses [Language Server Index Format (LSIF)](https://github.com/Microsoft/language-server-protocol/blob/main/indexFormat/specification.md) to extract info from a language server and make it available in a static format. And rust-analyzer bindings for LSIF already exist. The problem is that it would require a live server to work, which is a blocker to be integrated into rustdoc as it must work serverless.
 
+Another argument in favour of not relying on an external tool is to have support for cross-crate links as it is a very important part of any rust project. For example, if you're browsing a crate "A" and you encounter an item coming from crate "B" (because crates often delegate significant portions of their implementations to sub-crates, for compile performance and other reasons), it seems obvious that it should be able to link to it. This means any tool that does a good job of navigating Rust source code needs to be aware of that code's dependencies, and how to link directly to source code pages within those dependencies. For instance, `askama_shared/filters/json.rs.html` needs to link to `serde::Serialize`. Rustdoc can do that because it builds a copy of all dependencies when building documentation, and it can use reliable mapping from (crate, version) to a URL pointing to the source code. GitHub or Google Code Search can't really do this mppaing while staying within their own code navigation system, because there is not a reliable mapping from (crate, version) to (repository URL, tag).
+
 # Prior art
 [prior-art]: #prior-art
 
@@ -347,6 +359,56 @@ As mentionned above, it is actually quite common for documentation tools to have
 
 Is it the best way to make the links to go to an item documentation like this? Maybe something adding a small icon to click right besides it should be better?
 
-# Potential extensions
+### How to handle functions that do not pass type checking?
+
+In case a function doesn't pass type checking, but is still cfg-in thanks to a `cfg` (for example, `cfg(doc)`), rustdoc will display errors that don't impact the actual documentation generation. For example, the following code:
+
+```rust
+#[cfg(windows)]
+use std::os::windows::io::AsRawHandle;
+
+#[cfg(any(doc, windows))]
+pub fn my_fn() -> std::io::Result<std::fs::File> {
+    let f = std::fs::File::create("foo.txt")?;
+    let _handle = f.as_raw_handle();
+
+    // use handle with native windows bindings
+    Ok(f)
+}
+```
+
+gives the following output if we're not on windows:
+
+```
+$ rustdoc +dev foo.rs 
+$ rustdoc +dev -Z unstable-options --generate-link-to-definition foo.rs 
+error[E0599]: no method named `as_raw_handle` found for struct `std::fs::File` in the current scope
+ --> foo.rs:7:21
+  |
+7 |     let _handle = f.as_raw_handle();
+  |                     ^^^^^^^^^^^^^ method not found in `std::fs::File`
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain E0599`.
+```
+
+Originally, in [#84176](https://github.com/rust-lang/rust/pull/84176), the error output was disabled to prevent seeing these errors. It was later reverted in [#93222](https://github.com/rust-lang/rust/pull/93222) because it was a very bad approach to solving this issue.
+
+A position that can be taken on this problem would be to simply keep it as is since these errors are legitimate and actually provide useful information to users.
+
+## Adding an heuristic to automatically disable the feature on a file
+
+If a file contains too many links, it could potentially worsen the browsing experience. It was suggested to add an heuristic to determine if the feature should be disabled on a file. A few of thems were suggested:
+
+ * Disable when the file is too big: the problem with this approach is that a file could very well contain only documentation or comments and almost no links.
+ * Disable if the generated HTML is too big: this approach seems like the most reliable one but has a big inconvenient: it requires for the file to be generated to check its size, forcing us to re-render it in case it's too big but this time with the feature disabled.
+ * Disable if there are too many "span links" for this file: we have this information when we generate the source code page but we don't know how many "span links" are actually present by file unless we compute it. It would require to get the filename of each span to then increment the related counter. It would very likely be bad for performance as it requires to retrieve the file from each span we store and store increment the counter from the map.
+
+Another issue from all these heuristics is that it will very likely require some checks from usage before we can have a realistic value to use. As such, maybe these solutions should be visited when we have more usage of this feature in its definitive form?
+
+It's an issue that we expect to concern only a small subset of all the Rust crates though.
+
+### Potential extensions
 
 A potential extension would be "find references". It would allow users to check where the given item is being used. We already have all the information needed for this feature, so it's mostly how to use it and show it to the end users. However, if we decide to move forward with it, it will be part of another RFC.
