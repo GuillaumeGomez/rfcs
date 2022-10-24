@@ -120,7 +120,7 @@ There are two kinds of links:
 
 ### Jump to documentation
 
-All items with a documentation page will have a link to it (like methods, trait/impl associated items, etc). However, fields, variants and impl blocks won't (explications below).
+Each public [item](https://doc.rust-lang.org/reference/items.html) should have a link to its documentation (like methods, trait/impl associated items, etc). Fields, variants and impl blocks should not.
 
 The link will be generated on their ident/name where they are declared, not when they are in use. For example:
 
@@ -138,7 +138,7 @@ For fields and variants, it's simply to limit the quantity of links generated: y
 
 ### Jump to definition
 
-A small preamble before listing the items we should generate links for: if an item which will get a link is preceded by a path, each part of the path will be a link to its target. For example:
+We will generate a link for each path segment of a path to its respective definition. For example:
 
 ```rust
 let x: b::c::D; // `b` is a link to `b`, `c` is a link to `b::c`, `D` is a link to `b::c::D`.
@@ -189,7 +189,7 @@ Imports will have links as well, following the [Paths](#Paths) rules.
 
 #### Types
 
-Whenever a type appears, we will link to its definition. For example:
+Whenever we encounter a type path that refers to a type defined by an item (this excludes type parameters), we will link to its definition. For example:
 
 ```rust
 let x: String = "a".to_owned(); // we generate a link on `String`.
@@ -203,7 +203,7 @@ fn foo<F: Display, T: F + Debug>(f: F, t: T) {} // We generate a link on `Displa
 Whenever a function/method is present, we will generate a link to it. Example:
 
 ```rust
-let x: Fn() = some_fn; // We will link to `some_fn`.
+let x: fn() = some_fn; // We will link to `some_fn`.
 some_fn(); // We will link to `some_fn`.
 ty.a().b(); // We will link to `a` and to `b`.
 ```
