@@ -252,11 +252,11 @@ In this one, `X`, `Y` and `Z` will get a link.
 
 Some issues that can appear when generate cross-crate links is to link to non-existent locations. For example, if a version your crate depends on when published is yanked, your links (not just source code links but also links in documentation) will target non-existent pages and will result in 404 or "file not found" if local.
 
-A discussion about this suggested to instead add a new argument in the URL (`?source=true`) which would automatically click on the source link of the item on its documentation page. The problem is that private elements (unless the documentation is generated with `--document-private-items`) don't have a documentation page, which reduces the possibilities of this solution quite a lot. This fix would also only worked on web platform implementing it as it requires a server to pick a compatible version (in the semver meaning) for this crate. Another problem is: what to do if there is no compatible version (in the semver meaning still) available? For example, if there was only a `0.15` version published, `0.14.x` and `0.16.y` are not compatible to it. Then it would very likely just don't redirect and leave the user on the 404 page.
+A discussion about this suggested to instead add a new argument in the URL (`?source=true`) which would automatically click on the source link of the item on its documentation page. The problem is that hidden elements don't have a documentation page, so this would lead to another 404 error. This fix would also only worked on web platform implementing it since it requires a server to pick a compatible version (in the semver meaning) for this crate. Another problem is: what to do if there is no compatible version (in the semver meaning) available? For example, if there was only a `0.15` version published, `0.14.x` and `0.16.y` are not compatible to it. Then it would very likely just don't redirect and leave the user on the 404 page.
 
 The idea here would be to follow the current URL strategy in use for cross-crate items: generate a URL relative to the root path. If `--extern-html-root-url` isn't used, then the root-path is the one provided to rustdoc where to build documentation.
 
-This is somewhat the same answer for `cargo --no-deps`: unless rustdoc actually checks if the dependencies' locations are empty or not, there is no way for rustdoc to know if they're present. As such, it should simply assume that they are present and generate links for them as it does for the foreign items in the documentation pages.
+This is somewhat the same answer for `cargo --no-deps`: unless rustdoc actually checks if the dependencies' generated documentation folders are empty or not, there is no way for rustdoc to know if they exist or not. As such, it should simply assume that they are present and generate links for them as it does for the foreign items in the documentation pages.
 
 ## UI
 
@@ -334,7 +334,23 @@ External library (like `cpan` or `tree-sitter`): They would work to generate lin
 
 [SourceGraph](https://sourcegraph.com/github.com/rust-lang/rustc-demangle@2811a1ad6f7c8bead2ef3671e4fdc10de1553e96/-/blob/src/v0.rs?L65): SourceGraph uses [Language Server Index Format (LSIF)](https://github.com/Microsoft/language-server-protocol/blob/main/indexFormat/specification.md) to extract info from a language server and make it available in a static format. And rust-analyzer bindings for LSIF already exist. The problem is that it would require a live server to work, which is a blocker to be integrated into rustdoc as it must work serverless.
 
-Another argument in favour of not relying on an external tool is to have support for cross-crate links as it is a very important part of any rust project. For example, if you're browsing a crate "A" and you encounter an item coming from crate "B" (because crates often delegate significant portions of their implementations to sub-crates, for compile performance and other reasons), it seems obvious that it should be able to link to it. This means any tool that does a good job of navigating Rust source code needs to be aware of that code's dependencies, and how to link directly to source code pages within those dependencies. For instance, `askama_shared/filters/json.rs.html` needs to link to `serde::Serialize`. Rustdoc can do that because it builds a copy of all dependencies when building documentation, and it can use reliable mapping from (crate, version) to a URL pointing to the source code. GitHub or Google Code Search can't really do this mppaing while staying within their own code navigation system, because there is not a reliable mapping from (crate, version) to (repository URL, tag).
+Another argument in favour of not relying on an external tool is to have support for cross-crate links as it is a very important part of any rust project. Contrary to external tools like GitHub or Google Code Searchm it knows where the dependencies' documentations are. Here is an example with GitHub's Code Search preview:
+
+Visit [`servo::decoder`](https://cs.github.com/servo/servo/blob/9901cb399320e67c3ad2d62bf3a51d6ca993667b/components/net/decoder.rs#L102), part of the servo source code where it defines a gzip decoder:
+
+```rust
+/// A gzip decoder that reads from a `libflate::gzip::Decoder` into a `BytesMut` and emits the results
+/// as a `Bytes`.
+struct Gzip {
+    inner: Box<gzip::Decoder<Peeked<ReadableChunks<Body>>>>,
+    buf: BytesMut,
+    reader: Arc<Mutex<ReadableChunks<Body>>>,
+}
+```
+
+How do you get to the definition of `gzip::Decoder`? If you click on it, GitHub Code Search tells you the definition is in the same file at line 69. Unforuntately, it's wrong: it's another struct that happens to share the name `Decoder`.
+
+But even setting aside that mistake, could GitHub Code Search find the source for `libflate::non_blocking::gzip::Decoder` and link there? Unfortunately not since it's in a different repository and it's very likely that GitHub Code Search does not have any notion of cross-repository dependencies that follows Rust's package graph.
 
 # Prior art
 [prior-art]: #prior-art
@@ -361,7 +377,7 @@ Is it the best way to make the links to go to an item documentation like this? M
 
 ### How to handle functions that do not pass type checking?
 
-In case a function doesn't pass type checking, but is still cfg-in thanks to a `cfg` (for example, `cfg(doc)`), rustdoc will display errors that don't impact the actual documentation generation. For example, the following code:
+In case a function doesn't pass type checking, but is still cfg-in thanks to a `cfg` (for example, `cfg(doc)`), rustdoc will display errors (**that don't impact the actual documentation generation in any way! Even if errors are displayed, the documentation is generated as expected**). For example, the following code:
 
 ```rust
 #[cfg(windows)]
@@ -397,7 +413,7 @@ Originally, in [#84176](https://github.com/rust-lang/rust/pull/84176), the error
 
 A position that can be taken on this problem would be to simply keep it as is since these errors are legitimate and actually provide useful information to users.
 
-## Adding an heuristic to automatically disable the feature on a file
+### Adding an heuristic to automatically disable the feature on a file
 
 If a file contains too many links, it could potentially worsen the browsing experience. It was suggested to add an heuristic to determine if the feature should be disabled on a file. A few of thems were suggested:
 
@@ -408,6 +424,12 @@ If a file contains too many links, it could potentially worsen the browsing expe
 Another issue from all these heuristics is that it will very likely require some checks from usage before we can have a realistic value to use. As such, maybe these solutions should be visited when we have more usage of this feature in its definitive form?
 
 It's an issue that we expect to concern only a small subset of all the Rust crates though.
+
+### Adding a link to documentation for implementation blocks?
+
+Even though impl blocks are present in the documentation pages, we currently don't suggest adding a link to their documentation on them. A possibility would be to add the link on the `impl` keyword directly.
+
+One downside is that it wouldn't be coherent with the other links which are on the items' ident.
 
 ### Potential extensions
 
