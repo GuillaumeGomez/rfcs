@@ -22,13 +22,19 @@ This would make the documentation more engaging and easier to understand while l
 
 This RFC proposes to allow rustdoc to include local images in the generated documentation by copying them into the output directory.
 
-This would be done by allowing users to specify the path of a local resource file in doc comments. The resource file would be stored in the `local_resources/{crate name}` folder. The `local_resources` folder will be at the "top level" of the rustdoc output level (at the same level as the `static.files` or the `src` folders).
+This would be done by allowing users to specify the path of a local resource file in doc comments. The resource file would be stored in the `local.resources/{crate name}` folder. The `local.resources` folder will be at the "top level" of the rustdoc output level (at the same level as the `static.files` or the `src` folders).
 
-The only local resources considered will be the ones in the markdown image syntax: `![resource title](path)`.
+The local resources files are also affected by the `--resource-suffix`. So if you use `ext` as resource suffix, all local resources filename will follow this pattern: `{name}-ext{extension}`.
 
-The syntax for including a local resource file would be `{resource: <path>}`, where `<path>` is the path of the resource file relative to the source file.
+The only local resources considered will be the ones in the markdown image syntax: `![resource title](path)`, where `<path>` is the path of the resource file relative to the source file.
 
-The path could be either a relative path (`../images/my_image.png`) or an absolute path (`/images/my_image.png`).
+The path could be either a relative path (`../images/my_image.png`) or an absolute path (`/images/my_image.png`):
+
+```rust
+/// Using a local image ![with absolute path](/local/image.png)
+///
+/// Using a local image ![with relative path](../local/image.png)
+```
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -52,6 +58,10 @@ Allowing local resources in rustdoc output could lead to big output files if use
 - [sphinx](https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-latex_additional_files)
 - [haddock](https://haskell-haddock.readthedocs.io/en/latest/invoking.html?highlight=image#cmdoption-theme): it's mentioned in this command documentation that local files in the given directory will be copied into the generated output directory.
 - [doxygen](https://doxygen.nl/manual/commands.html#cmdimage): supported through `\image`.
+
+Another approach to this feature:
+
+[ePUB packages](https://www.w3.org/publishing/epub3/epub-packages.html#sec-pkg-manifest) use explicitly-declared manifests. It allows to have a fallback chain mechanism (going through resources for an entry until an available resource is found).
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
