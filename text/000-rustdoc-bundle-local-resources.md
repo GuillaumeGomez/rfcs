@@ -24,8 +24,6 @@ This RFC proposes to allow rustdoc to include local images in the generated docu
 
 This would be done by allowing users to specify the path of a local resource file in doc comments. The resource file would be stored in the `local.resources/{crate name}` folder. The `local.resources` folder will be at the "top level" of the rustdoc output level (at the same level as the `static.files` or the `src` folders).
 
-The local resources files are also affected by the `--resource-suffix`. So if you use `ext` as resource suffix, all local resources filename will follow this pattern: `{name}-ext{extension}`.
-
 The only local resources considered will be the ones in the markdown image syntax: `![resource title](path)`, where `<path>` is the path of the resource file relative to the source file.
 
 The path could be either a relative path (`../images/my_image.png`) or an absolute path (`/images/my_image.png`):
@@ -36,6 +34,8 @@ The path could be either a relative path (`../images/my_image.png`) or an absolu
 /// Using a local image ![with relative path](../local/image.png)
 ```
 
+The local resources files are not affected by the `--resource-suffix`.
+
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
@@ -43,7 +43,7 @@ A new rustdoc pass will be added which would go through all documentation to gat
 
 Then in HTML documentation generation, the local resources pathes will be replaced by their equivalent linking to the output directory instead.
 
-The local resources will be renamed depending on the order we go across them as follows: `{nb}{extension}`. The only thing kept is the original file extension. This solution was picked because it is possible for two local resources located in different folders to have the same filename, which would be problematic.
+The local resources files will be renamed as follows: `{original filename}-{hash}{extension}`. The `{hash}` information will be computed from the local resource file content.
 
 You can look at what the implementation could look like in [#107640](https://github.com/rust-lang/rust/pull/107640).
 
@@ -74,3 +74,12 @@ Currently, to provide resources, users need to specify external URLs for resourc
 - Should we put a size limit on the local resources?
 - Should we somehow keep the original local resource filename instead of just using a number instead?
 - Should we use this feature for the logo if it's a local file?
+
+# Possible extensions
+[possible-extensions]: #possible-extensions
+
+This feature could be extended to DOM content using local resources. It would require to add parsing for HTML tags attributes. For example:
+
+```html
+/// <video src="../some-video.mp4">
+```
