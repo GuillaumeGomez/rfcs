@@ -22,7 +22,7 @@ This would make the documentation more engaging and easier to understand while l
 
 This RFC proposes to allow rustdoc to include local images in the generated documentation by copying them into the output directory.
 
-This would be done by allowing users to specify the path of a local resource file in doc comments. The resource file would be stored in the `local.resources/{crate name}` folder. The `local.resources` folder will be at the "top level" of the rustdoc output level (at the same level as the `static.files` or the `src` folders).
+This would be done by allowing users to specify the path of a local resource file in doc comments. The resource file would be stored in the `doc.files/{crate name}` folder. The `doc.files` folder will be at the "top level" of the rustdoc output level (at the same level as the `static.files` or the `src` folders).
 
 The only local resources considered will be the ones in the markdown image syntax: `![resource title](path)`, where `<path>` is the path of the resource file relative to the source file.
 
