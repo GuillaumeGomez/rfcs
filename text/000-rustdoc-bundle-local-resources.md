@@ -37,7 +37,7 @@ The path could be either a relative path (`../images/my_image.png`) or an absolu
 
 If the path isn't referring to a file, a warning will be emitted and rustdoc will left the path unchanged in the generated documentation.
 
-Important to be noted for published crates: local resources need to be bundled with the crate so they can be retrieved by rustdoc and absolute paths won't work.
+For published crates, docs.rs builds the contents of the `.crate` package in a sandbox with no internet access. Make sure any resources your docs need are [included](https://doc.rust-lang.org/cargo/reference/manifest.html#the-exclude-and-include-fields) in the package.
 
 The local resources files are not affected by the `--resource-suffix`.
 
