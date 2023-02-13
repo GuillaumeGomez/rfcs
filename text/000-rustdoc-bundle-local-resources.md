@@ -26,10 +26,11 @@ This would be done by allowing users to specify the path of a local resource fil
 
 The only local resources considered will be the ones in the markdown image syntax: `![resource title](path)`, where `<path>` is the path of the resource file relative to the source file.
 
-The path could be either a relative path (`../images/my_image.png`) or an absolute path (`/images/my_image.png`):
+The path could be either a relative path (`../images/my_image.png`) or an absolute path (like `/home/user/project/images/my_image.png` or `C:/Users/user/project/images/my_image.png`) so that paths can be constructed using `OUT_DIR`:
 
 ```rust
-/// Using a local image ![with absolute path](/local/image.png)
+/// Using a local image
+#[doc=concat!("![with absolute path](", env!("OUT_DIR"), "/local/image.png)")]
 ///
 /// Using a local image ![with relative path](../local/image.png)
 ```
