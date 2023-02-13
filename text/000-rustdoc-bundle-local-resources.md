@@ -17,7 +17,7 @@ Currently, rustdoc does not allow for the inclusion of local images in the gener
 
 This would make the documentation more engaging and easier to understand while lowering the amount of effort required to achieve a better result.
 
-# Guide-level explanationvide
+# Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
 This RFC proposes to allow rustdoc to include local images in the generated documentation by copying them into the output directory.
@@ -37,7 +37,11 @@ The path could be either a relative path (`../images/my_image.png`) or an absolu
 
 If the path isn't referring to a file, a warning will be emitted and rustdoc will left the path unchanged in the generated documentation.
 
+Important to be noted for published crates: local resources need to be bundled with the crate so they can be retrieved by rustdoc and absolute paths won't work.
+
 The local resources files are not affected by the `--resource-suffix`.
+
+The impact on `docs.rs` would also be very minimal as the size of a published crate resources is limited to a few megabytes. The only thing needed would be to handle the new `doc.files` folder.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
