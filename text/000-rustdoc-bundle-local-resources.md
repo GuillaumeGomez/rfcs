@@ -34,6 +34,8 @@ The path could be either a relative path (`../images/my_image.png`) or an absolu
 /// Using a local image ![with relative path](../local/image.png)
 ```
 
+If the path isn't referring to a file, a warning will be emitted and rustdoc will left the path unchanged in the generated documentation.
+
 The local resources files are not affected by the `--resource-suffix`.
 
 # Reference-level explanation
