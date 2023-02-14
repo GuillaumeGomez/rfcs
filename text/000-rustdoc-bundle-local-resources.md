@@ -13,9 +13,9 @@ This RFC proposes to allow the bundling of local images in rustdoc HTML output. 
 # Motivation
 [motivation]: #motivation
 
-Currently, rustdoc does not allow for the inclusion of local images in the generated output. This limits users from customizing their rustdoc output by adding images to their documentation as they currently need to host them on a web server so they can be available from anywhere, but therefore requiring an access to the internet. Bundling local images would enable users to customize their rustdoc output and make it more visually appealing.
+Doc authors want to produce docs that are consistent across local `cargo doc` output, <docs.rs>, and self-hosted docs. They would also like to include images (like logos and diagrams), and scripts (like KaTeX for rendering math symbols). Both doc authors and doc readers would like for those resources to not be subject to link-rot, which means it should be possible to build docs for an old version of a crate and have the images and scripts reliably available. Doc readers would like for `cargo doc` output to be rendered correctly by their browsers even when they are offline.
 
-This would make the documentation more engaging and easier to understand while lowering the amount of effort required to achieve a better result.
+Right now, there are attributes that can set a logo and a favicon for documentation, but they must to point to an absolute URL, which prevents bundling the logo and favicon in the source repository. Also, while `<script>` tags are allowed in rustdoc, they have a similar problem: if they load script from some URL, that URL needs to be absolute or it won't work consistently across `cargo doc` and <docs.rs>.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -35,13 +35,17 @@ The path could be either a relative path (`../images/my_image.png`) or an absolu
 /// Using a local image ![with relative path](../local/image.png)
 ```
 
+Since the local images are all put in the same folder, if the same is imported from different crates, the content won't be duplicated since they have the same name and the same hash.
+
 If the path isn't referring to a file, a warning will be emitted and rustdoc will left the path unchanged in the generated documentation.
 
-For published crates, docs.rs builds the contents of the `.crate` package in a sandbox with no internet access. Make sure any resources your docs need are [included](https://doc.rust-lang.org/cargo/reference/manifest.html#the-exclude-and-include-fields) in the package.
+For published crates, <docs.rs> builds the contents of the `.crate` package in a sandbox with no internet access. Make sure any resources your docs need are [included](https://doc.rust-lang.org/cargo/reference/manifest.html#the-exclude-and-include-fields) in the package.
 
 The local resources files are not affected by the `--resource-suffix`.
 
-The impact on `docs.rs` would also be very minimal as the size of a published crate resources is limited to a few megabytes. The only thing needed would be to handle the new `doc.files` folder.
+The impact on >docs.rs> would also be very minimal as the size of a published crate resources is limited to a few megabytes. The only thing needed would be to handle the new `doc.files` folder.
+
+To support `#[doc(inline)]` for foreign items using local resources, we will store each crate generated local resources correspondance map into a JSON file named `{crate}.json`. So when inlining a foreign item, we can look directly into this file to know which path to generate for each local image.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -58,6 +62,8 @@ You can look at what the implementation could look like in [#107640](https://git
 [drawbacks]: #drawbacks
 
 Allowing local resources in rustdoc output could lead to big output files if users include big resource files. This could lead to slower build times and increase the size of generated documentation (in particular in case of very big local resources!).
+
+Another problem is that people will add images into their published crates, increasing the package size whereas it's only used for documentation.
 
 # Prior art
 [prior-art]: #prior-art
@@ -81,6 +87,7 @@ Currently, to provide resources, users need to specify external URLs for resourc
 - Should we put a size limit on the local resources?
 - Should we somehow keep the original local resource filename instead of just using a number instead?
 - Should we use this feature for the logo if it's a local file?
+- Should we support this for favicon and logo directly into this RFC or should we make a follow-up RFC to allow them to support local files?
 
 # Possible extensions
 [possible-extensions]: #possible-extensions
