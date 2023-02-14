@@ -45,7 +45,15 @@ The local resources files are not affected by the `--resource-suffix`.
 
 The impact on >docs.rs> would also be very minimal as the size of a published crate resources is limited to a few megabytes. The only thing needed would be to handle the new `doc.files` folder.
 
-To support `#[doc(inline)]` for foreign items using local resources, we will store each crate generated local resources correspondance map into a JSON file named `{crate}.json`. So when inlining a foreign item, we can look directly into this file to know which path to generate for each local image.
+There are two options that will be impacted by this RFC: the favicon and logo that you can respectively set through:
+
+```rust
+#![doc(html_favicon_url = "some_path", html_logo_url = "some_other_path")]
+```
+
+They will follow the same rule as for other images: if this is a local path, the local file will be copied and the paths to it will be rewritten.
+
+To support `#[doc(inline)]` for foreign items using local resources, it will rely on the `-Zrustdoc-map` option.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -87,7 +95,6 @@ Currently, to provide resources, users need to specify external URLs for resourc
 - Should we put a size limit on the local resources?
 - Should we somehow keep the original local resource filename instead of just using a number instead?
 - Should we use this feature for the logo if it's a local file?
-- Should we support this for favicon and logo directly into this RFC or should we make a follow-up RFC to allow them to support local files?
 
 # Possible extensions
 [possible-extensions]: #possible-extensions
