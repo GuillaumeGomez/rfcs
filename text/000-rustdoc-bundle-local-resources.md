@@ -68,7 +68,7 @@ You can look at what the implementation could look like in [#107640](https://git
 
 When an image is included in an item that gets inlined across a crate, rustdoc will treat it like a cross-crate intra-doc link, using `--extern-html-root-url` so that `docs.rs` can hotlink the image from the crate that holds a copy of the image. This has a few upsides and downsides compared to the approach where the image itself is copied into the crate with the inlined docs.
 
- * reduces the number of duplicated images that docs.rs has to store
+ * reduces the number of duplicated images that `docs.rs` has to store
  * doesn't require the source code for the source crate when inlining
  * only requires storing the hash of the file in the `.rmeta`, not the whole image
  * requires rustc to look at the doc comments and hash the image(s)
